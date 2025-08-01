@@ -1,0 +1,13 @@
+# Byte‐compiled Python
+__pycache__/
+*.py[cod]
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Large data
+data/study_data/
+results/
+
+# Study-specific files
+notebooks/study_notebooks/
