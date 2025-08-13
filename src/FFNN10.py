@@ -53,8 +53,6 @@ def build_ffnn_full_seq(input_dim: int) -> tf.keras.Model:
         name="ffnn_full_seq_w10",
     )
 
-
-WINDOW = 10
 input_dim = WINDOW * 3
 
 # Build the Sequential model
