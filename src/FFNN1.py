@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 PROJECT_ROOT = Path(__file__).parent.parent
 
-data_file = PROJECT_ROOT / "data" / ".csv"
+data_file = PROJECT_ROOT / "data" / "lorenz_windows_w1.csv"
 
 # store runs inside your repo under mlruns/
 mlflow.set_tracking_uri(f"file:{PROJECT_ROOT / 'mlruns'}")
