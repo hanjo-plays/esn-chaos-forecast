@@ -1,14 +1,12 @@
 from pathlib import Path
 
+import mlflow
+import mlflow.keras  # works with tf.keras
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from sklearn.metrics import r2_score, root_mean_squared_error
 from sklearn.model_selection import train_test_split
-
-import mlflow
-import mlflow.keras  # works with tf.keras
-
 
 PROJECT_ROOT = Path(__file__).parent.parent
 
@@ -36,6 +34,7 @@ X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_st
 
 batch_size = 32
 
+
 def build_ffnn_full_seq(input_dim: int) -> tf.keras.Model:
     return tf.keras.Sequential(
         [
@@ -49,6 +48,7 @@ def build_ffnn_full_seq(input_dim: int) -> tf.keras.Model:
         ],
         name="ffnn_full_seq_w10",
     )
+
 
 input_dim = WINDOW * 3
 
@@ -84,16 +84,18 @@ history_seq = model_seq.fit(
     batch_size=batch_size,
     epochs=200,
     callbacks=callbacks,
-    shuffle=True
+    shuffle=True,
 )
 
 # Evaluate
 val_loss, val_mae = model_seq.evaluate(X_val, y_val, batch_size=batch_size)
-print(f"Seq model — loss: {val_loss:.4f}, mae: {val_mae:.4f}")
 
 # Predictions
 y_true = y_val
 y_pred = model_seq.predict(X_val, batch_size=batch_size)
+
+# Print results
+print(f"Seq model — loss: {val_loss:.4f}, mae: {val_mae:.4f}")
 
 # RMSE
 rmse = root_mean_squared_error(y_true, y_pred)
