@@ -47,7 +47,7 @@ def build_ffnn_full_seq(input_dim: int) -> tf.keras.Model:
             tf.keras.layers.Dropout(0.3),
             tf.keras.layers.Dense(3, name="predictions"),
         ],
-        name="ffnn_full_seq_w10",
+        name="ffnn_full_seq_w1",
     )
 
 
