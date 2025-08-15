@@ -6,9 +6,18 @@ import tensorflow as tf
 from sklearn.metrics import r2_score, root_mean_squared_error
 from sklearn.model_selection import train_test_split
 
+import mlflow
+import mlflow.keras  # works with tf.keras
+
+
 PROJECT_ROOT = Path(__file__).parent.parent
 
 data_file = PROJECT_ROOT / "data" / "lorenz_windows_w10.csv"
+
+# store runs inside your repo under mlruns/
+mlflow.set_tracking_uri(f"file:{PROJECT_ROOT / 'mlruns'}")
+mlflow.set_experiment("Lorenz_FFNN")
+mlflow.keras.autolog(log_models=False)
 
 # Read the CSV
 df = pd.read_csv(data_file)
@@ -48,7 +57,7 @@ model_seq = build_ffnn_full_seq(input_dim)
 
 # Adapt the normalization layer (must do *after* model is built)
 norm_layer = model_seq.get_layer("norm")
-norm_layer.adapt(X_train.astype())
+norm_layer.adapt(X_train.astype("float32"))
 
 # Compile
 model_seq.compile(optimizer=tf.keras.optimizers.Adam(1e-4), loss="mse", metrics=["mae"])
@@ -63,7 +72,7 @@ callbacks = [
         monitor="val_loss", patience=10, restore_best_weights=True
     ),
     tf.keras.callbacks.ModelCheckpoint(
-        "ffnn_full_seq_w10_best.h5", save_best_only=True, monitor="val_loss"
+        "src/ffnn_full_seq_w10_best.h5", save_best_only=True, monitor="val_loss"
     ),
 ]
 

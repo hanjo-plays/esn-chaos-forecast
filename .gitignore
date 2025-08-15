@@ -11,3 +11,7 @@ results/
 
 # Study-specific files
 notebooks/
+
+# Logs and MlRuns
+logs/
+mlruns/
