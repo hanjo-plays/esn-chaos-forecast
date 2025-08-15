@@ -22,82 +22,78 @@ df = pd.read_csv(data_file)
 print(df.head(5))
 
 
-WINDOW = 10
-feature_col = [f"{axis}_t{i}" for i in range(WINDOW) for axis in ("x", "y", "z")]
-
+feature_col = ["x_t0", "y_t0", "z_t0"]
 target_col = ["x_next", "y_next", "z_next"]
 
 X = df[feature_col].values
-y = df[target_col].values
+y = df[feature_col].values
+
+X = X.reshape(-1, 1, 3)
 
 X_train, X_val, y_train, y_val = train_test_split(
-    X, y, test_size=0.2, random_state=123
+    X, y, test_size=0.2, random_state=123, shuffle=True
 )
 
 batch_size = 32
 
 
-def build_ffnn_full_seq(input_dim: int) -> tf.keras.Model:
+def build_lstm_w1_seq() -> tf.keras.Model:
     return tf.keras.Sequential(
         [
-            tf.keras.layers.Input(shape=(input_dim,), name="history_input"),
+            tf.keras.layers.Input(shape=(1, 3), name="last_state"),  # (time=1, feat=3)
             tf.keras.layers.Normalization(name="norm"),
-            tf.keras.layers.Dense(128, activation="relu", kernel_regularizer="l2"),
-            tf.keras.layers.Dropout(0.3),
-            tf.keras.layers.Dense(64, activation="relu", kernel_regularizer="l2"),
-            tf.keras.layers.Dropout(0.3),
-            tf.keras.layers.Dense(3, name="predictions"),
+            tf.keras.layers.LSTM(64, name="lstm"),  # -> (batch, 64)
+            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(3, name="next_state"),
         ],
-        name="ffnn_full_seq_w10",
+        name="lstm_w1_seq",
     )
 
 
-input_dim = WINDOW * 3
-
 # Build the Sequential model
-model_seq = build_ffnn_full_seq(input_dim)
+model = build_lstm_w1_seq()
 
-# Adapt the normalization layer (must do *after* model is built)
-norm_layer = model_seq.get_layer("norm")
-norm_layer.adapt(X_train.astype("float32"))
+# IMPORTANT: adapt the Normalization layer on *training inputs*
+norm = model.get_layer("norm")
+norm.adapt(X_train)  # shape (N, 1, 3) — matches model's expected input rank
 
-# Compile
-model_seq.compile(optimizer=tf.keras.optimizers.Adam(1e-4), loss="mse", metrics=["mae"])
+# compile
+model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss="mse", metrics=["mae"])
 
-# Callbacks
+# callbacks (optional but good practice)
 callbacks = [
     tf.keras.callbacks.TensorBoard(
-        log_dir="logs/ffnn_w10",
-        histogram_freq=1,  # record weight & activation histograms every epoch
+        log_dir="logs/lstm_w1",
+        histogram_freq=1,
     ),
     tf.keras.callbacks.EarlyStopping(
         monitor="val_loss", patience=10, restore_best_weights=True
     ),
     tf.keras.callbacks.ModelCheckpoint(
-        "src/ffnn_full_seq_w10_best.h5", save_best_only=True, monitor="val_loss"
+        "src/lstm_w1_best.h5", save_best_only=True, monitor="val_loss"
     ),
 ]
 
-# Train
-history_seq = model_seq.fit(
+# train
+history = model.fit(
     X_train,
     y_train,
     validation_data=(X_val, y_val),
-    batch_size=batch_size,
     epochs=200,
+    batch_size=batch_size,
     callbacks=callbacks,
     shuffle=True,
 )
 
-# Evaluate
-val_loss, val_mae = model_seq.evaluate(X_val, y_val, batch_size=batch_size)
+# evaluate + extra metrics
+val_mse, val_mae = model.evaluate(X_val, y_val, batch_size=batch_size, verbose=0)
 
 # Predictions
 y_true = y_val
-y_pred = model_seq.predict(X_val, batch_size=batch_size)
+y_pred = model.predict(X_val, batch_size=batch_size, verbose=0)
 
 # Print results
-print(f"Seq model — loss: {val_loss:.4f}, mae: {val_mae:.4f}")
+print(f"Val MSE: {val_mse:.4f} | Val MAE: {val_mae:.4f}")
 
 # RMSE
 rmse = root_mean_squared_error(y_true, y_pred)
