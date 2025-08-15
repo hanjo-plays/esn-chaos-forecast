@@ -14,7 +14,7 @@ data_file = PROJECT_ROOT / "data" / "lorenz_windows_w10.csv"
 
 # store runs inside your repo under mlruns/
 mlflow.set_tracking_uri(f"file:{PROJECT_ROOT / 'mlruns'}")
-mlflow.set_experiment("Lorenz_FFNN")
+mlflow.set_experiment("Lorenz_LSTM")
 mlflow.keras.autolog(log_models=False)
 
 # Read the CSV

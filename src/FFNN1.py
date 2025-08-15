@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 PROJECT_ROOT = Path(__file__).parent.parent
 
-data_file = PROJECT_ROOT / "data" / "lorenz_windows_w10.csv"
+data_file = PROJECT_ROOT / "data" / ".csv"
 
 # store runs inside your repo under mlruns/
 mlflow.set_tracking_uri(f"file:{PROJECT_ROOT / 'mlruns'}")
@@ -22,7 +22,7 @@ df = pd.read_csv(data_file)
 print(df.head(5))
 
 
-WINDOW = 10
+WINDOW = 1
 feature_col = [f"{axis}_t{i}" for i in range(WINDOW) for axis in ("x", "y", "z")]
 target_col = ["x_next", "y_next", "z_next"]
 
